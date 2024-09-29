@@ -1,0 +1,46 @@
+@startuml
+title Device Service Component Diagram
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Container_Boundary(SmartHome, "Smart Home System") {
+  Container(DeviceService, "Device Service", "Java, Spring", "")
+  Container(Database, "Database", "PostgreSQL", "Хранит информацию об устройствах")
+  Container(Device, "Device", "Устройство")
+  Container(CoreService, "Core Service", "Конфигурационный сервис")
+Container(Kafka, "Kafka Devices", "Очередь событий")
+
+}
+
+Container(DeviceService, "Device Service", "Java, Spring") {
+  Component(API, "APIController", "Обрабатывает синхронные запросы")
+  Component(DeviceManager, "Device Manager", "CRUD операции")
+  Component(CommandHandler, "Command Handler", "Обработчик команд")
+  Component(CommandFactory, "Command Factory", "Фабрика команд")
+  Component(StateManager, "State Manager", "Менеджер состояния")
+  Component(RepositoryLayer, "Repository Layer", "Слой доступа к данным")
+  Component(Cache, "Memory Cache", "Кэш конфигураций устройств")
+Component(EventGenerator, "Event Generator", "Генерирует событие для внешних сервисов")
+
+}
+
+Rel(API,CommandHandler,"Выполнить команду")
+Rel(API,StateManager,"Управлять состоянием устройства")
+Rel(API,DeviceManager,"CRUD операции")
+Rel(DeviceManager,RepositoryLayer,"CRUD операции")
+Rel(CommandHandler,CommandFactory,"Получить команду для исполнения")
+Rel(CommandFactory,RepositoryLayer,"Получить данные устройства")
+Rel(CommandFactory,Cache,"Получить конфигурацию по типу устройства")
+Rel(Cache,CoreService,"Получить конфигурацию по типу устройства")
+Rel(StateManager,RepositoryLayer,"Получить данные устройства")
+Rel(StateManager,EventGenerator,"Событие выполнения команды")
+Rel(CommandHandler,EventGenerator,"Событие выполнения команды")
+Rel(RepositoryLayer,Database,"Reads/Writes data")
+Rel(EventGenerator,Kafka,"Событие выполнения команды")
+
+
+Rel(CommandHandler,Device, "Запрос к устройству")
+Rel(StateManager,Device, "Запрос к устройству")
+@enduml

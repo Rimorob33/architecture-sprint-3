@@ -1,0 +1,120 @@
+@startuml
+title ER Diagram
+
+top to bottom direction
+
+entity "TypeDevice" {
+  *id : bigint <<PK>>
+  --
+  title : nvarchar
+
+}
+
+entity "ActionCnfg" {
+  *id : bigint <<PK>>
+  --
+  * type_device_id : bigint <<FK>>
+  is_user_action : boolean
+  title : nvarchar
+  name : nvarchar
+  body : nvarchar
+}
+
+entity "User" {
+  *id : bigint <<PK>>
+  --
+  name : nvarchar
+}
+
+entity "SmartHome" {
+  *id : bigint <<PK>>
+  --
+  * user_id : bigint <<FK>>
+}
+
+entity "Sensor" {
+  *id : bigint <<PK>>
+  --
+  * smart_home_id : bigint <<FK>>
+  mac : nvarchar
+}
+
+entity "Device" {
+  *id : bigint <<PK>>
+  --
+  * home_id : bigint <<FK>>
+  smart_home_id : bigint <<FK>>
+  mac : nvarchar
+ }
+
+
+
+entity "TelemetryData" {
+*id : bigint <<PK>>
+--
+* sensor_id : bigint <<FK>>
+data : nvarchar <json>
+}
+
+
+entity "SensorSchedule" {
+*id : bigint <<PK>>
+--
+* sensor_id : bigint <<FK>>
+cron : nvarchar
+}
+
+entity "AutoScript" {
+*id : bigint <<PK>>
+--
+* smart_home_id : bigint <<FK>>
+}
+
+entity "Event_Action" {
+*id : bigint <<PK>>
+--
+* auto_script_id : bigint <<FK>>
+* event_id : bigint <<FK>>
+}
+
+entity "Event" {
+*id : bigint <<PK>>
+--
+description : nvarchar
+type : EventType
+* sensor_id : bigint <<FK>>
+event_sensor_condition : nvarchar
+}
+
+enum "EventType" {
+sensor
+device
+}
+
+entity "Action" {
+ *id : bigint <<PK>>
+ --
+ * action_cnfg_id : bigint <<FK>>
+ * event_action_id : bigint <<FK>>
+ * event_produce_id : bigint <<FK>>
+  body : nvarchar
+ }
+
+User ||--o{ SmartHome
+SmartHome ||--o{ Device
+SmartHome ||--o{ Sensor
+SmartHome ||--o{ SensorSchedule
+SmartHome ||--|| AutoScript
+
+
+AutoScript ||--|{ Event_Action
+Event_Action }|--|| Event
+Event_Action ||--|{ Action
+Event ||--|| Action
+Event ||--o| Sensor
+
+Device ||--o{ TypeDevice
+
+TypeDevice ||--o{ ActionCnfg
+
+@enduml

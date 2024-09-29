@@ -1,0 +1,19 @@
+@startuml
+title Smart Home System
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+System(DevicesManagement, "Domain: Devices Management", "Управление устройствами")
+System(SensorsManagement, "Domain: Sensors Management", "Управление датчиками")
+
+System_Boundary(DevicesManagement, "") {
+System(DeviceManagement, "Context: Device Management", "Управление устройством")
+}
+
+System_Boundary(SensorsManagement, "") {
+System(TelemetryViewing, "Context: Telemetry Viewing", "Отображение телеметрии")
+System(TelemetryDataCollection, "Context: Telemetry Data Collection", "Сбор телеметрии с датчиков")
+}
+@enduml
