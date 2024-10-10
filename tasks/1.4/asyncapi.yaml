@@ -1,0 +1,159 @@
+asyncapi: 3.0.0
+info:
+  title: Smart Home Kafka API
+  version: 1.0.0
+defaultContentType: application/json
+servers:
+  sensors-kafka:
+    host: sensors-kafka
+    protocol: kafka-secure
+    description: Брокер сообщений для взаимодействия с сенсорами
+    security:
+      - $ref: '#/components/securitySchemes/saslScram'
+  devices-kafka:
+    host: devices-kafka
+    protocol: kafka-secure
+    description: Брокер сообщений для взаимодействия с устройствами
+    security:
+      - $ref: '#/components/securitySchemes/saslScram'
+channels:
+  telemetryData:
+    servers:
+      - $ref: '#/servers/sensors-kafka'
+    messages:
+      telemetryData:
+        $ref: '#/components/messages/telemetryData'
+    description: Топик содержит телеметрию с сенсоров
+  deviceAction:
+    servers:
+      - $ref: '#/servers/devices-kafka'
+    messages:
+      deviceAction:
+        $ref: '#/components/messages/action'
+    description: Топик содержит команды к устройствам, которые необходимо исполнить
+  actionEvent:
+    servers:
+      - $ref: '#/servers/devices-kafka'
+    messages:
+      actionEvent:
+        $ref: '#/components/messages/actionEvent'
+    description: >-
+      Топик содержит события сгенерированные в результате успешного исполнения
+      команды к устройствам
+operations:
+  saveTelemetryData:
+    action: receive
+    channel:
+      $ref: '#/channels/telemetryData'
+    summary: Получить данные телеметрии для сохранения
+    traits:
+      - $ref: '#/components/operationTraits/kafka'
+    messages:
+      - $ref: '#/channels/telemetryData/messages/telemetryData'
+  receiveAction:
+    action: receive
+    channel:
+      $ref: '#/channels/deviceAction'
+    summary: Получить команду к устройсту для дальнейшего исполнения
+    traits:
+      - $ref: '#/components/operationTraits/kafka'
+    messages:
+      - $ref: '#/channels/deviceAction/messages/deviceAction'
+  sendActionResult:
+    action: send
+    channel:
+      $ref: '#/channels/actionEvent'
+    summary: Отправить результат выполнения команды к устройству
+    traits:
+      - $ref: '#/components/operationTraits/kafka'
+    messages:
+      - $ref: '#/channels/actionEvent/messages/actionEvent'
+components:
+  messages:
+    telemetryData:
+      name: telemetryData
+      title: Telemetry Data
+      summary: Данные телеметрии от сенсора
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/telemetryDataPayload'
+    action:
+      name: action
+      title: action
+      summary: Команда к устройству
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/actionPayload'
+    actionEvent:
+      name: actionEvent
+      title: actionEvent
+      summary: Результат выполнения команды
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/actionEventPayload'
+  schemas:
+    telemetryDataPayload:
+      type: object
+      properties:
+        sensorId:
+          type: number
+          format: int64
+          minimum: 1
+          example: 1
+        sentAt:
+          $ref: '#/components/schemas/sentAt'
+        data:
+          type: string
+          format: json
+          example:
+            temperature: 25.5
+    actionPayload:
+      type: object
+      properties:
+        deviceId:
+          type: number
+          format: int64
+          minimum: 1
+          example: 1
+        actionId:
+          type: number
+          format: int64
+          minimum: 1
+          example: 1
+        actionParams:
+          type: string
+          format: json
+          example:
+            target: 30
+            speed: fast
+    actionEventPayload:
+      type: object
+      properties:
+        deviceId:
+          type: number
+          format: int64
+          minimum: 1
+          example: 1
+        event:
+          type: string
+          example: tmpReached
+    sentAt:
+      type: string
+      format: date-time
+      description: Date and time when the message was sent.
+      example: 2022-01-31T21:00:00.000Z
+  securitySchemes:
+    saslScram:
+      type: scramSha256
+      description: Provide your username and password for SASL/SCRAM authentication
+    certs:
+      type: X509
+      description: Download the certificate files from service provider
+  operationTraits:
+    kafka:
+      bindings:
+        kafka:
+          clientId:
+            type: string
+            enum:
+              - my-app-id

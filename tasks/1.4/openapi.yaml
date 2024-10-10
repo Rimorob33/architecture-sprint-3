@@ -1,0 +1,276 @@
+openapi: 3.0.3
+info:
+  title: Swagger - OpenAPI 3.0
+  description: |-
+  version: 1.0.11
+paths:
+  /telemetry:
+    get:
+      tags:
+        - telemetryLast
+      summary: Просмотреть последние данные телеметрии
+      description: Возвращает последние данные телеметрии
+      operationId: getTelemetryLast
+      parameters:
+        - name: sensorId
+          in: query
+          description: Идентификатор сенсора
+          required: true
+          schema:
+            type: integer
+            format: int64
+            example: 1
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TelemetryItem'
+        '400':
+          description: Invalid ID supplied
+    post:
+      tags:
+        - telemetry
+      summary: Просмотреть данные телеметрии
+      description: Возвращает данные телеметрии удовлетворяющие поисковому запросу
+      operationId: getTelemetry
+      parameters:
+        - name: sensorId
+          in: query
+          description: Идентификатор сенсора
+          required: true
+          schema:
+            type: integer
+            format: int64
+            example: 1 
+        - name: gte
+          in: query
+          description: Начальная граница поиска телеметрии
+          schema:
+            type: string
+            format: date-time
+            example: 2022-01-01 14:38:08+03 
+        - name: lte
+          in: query
+          description: Конечная граница поиска телеметрии
+          schema:
+            type: string
+            format: date-time
+            example: 2022-02-02 14:38:08+03
+      requestBody:
+        description: Запрос телеметрии
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TelemetryQuery'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TelemetryData'
+        '400':
+          description: Invalid ID supplied
+  /device:
+    put:
+      tags:
+        - device
+      summary: Обновляет данные устройства
+      description: Обновляет данные устройства по идентификатору
+      operationId: updatedevice
+      requestBody:
+        description: Обновляет данные устройства в БД
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Device'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Device not found
+        '422':
+          description: Validation exception
+    post:
+      tags:
+        - device
+      summary: Добавляет новое устройство
+      description: Добавляет новое устройство
+      operationId: adddevice
+      requestBody:
+        description: Добавляет новое устройство
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Device'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation exception
+  /device/{deviceId}:
+    get:
+      tags:
+        - device
+      summary: Ищет устройство по идентификатору
+      description: Возвращает единственное устройство
+      operationId: getDeviceById
+      parameters:
+        - name: deviceId
+          in: path
+          description: Идентификатор устройства
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device' 
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Device not found
+    delete:
+      tags:
+        - device
+      summary: Удаляет устройство
+      description: Удаляет устройство
+      operationId: deleteDevice
+      parameters:
+        - name: deviceId
+          in: path
+          description: Идентификатор устройства
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful operation
+        '404':
+          description: Device not found
+        '400':
+          description: Invalid ID supplied
+  /device/turnOnOff:
+    put:
+      tags:
+        - device
+      summary: Включает/выключает устройство
+      description: Включает/выключает устройство
+      operationId: turnOnOffDevice
+      requestBody:
+        description: Включает/выключает устройство
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TurnOnOffDto'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Device not found
+components:
+  schemas:
+    DeviceActionDto:
+      type: object
+      properties:
+        deviceId:
+          type: integer
+          format: int64
+          example: 1
+        actionId:
+          type: integer
+          format: int64
+          example: 1
+        actionParams:
+          type: string
+          format: json
+          example: {target: 30, speed: fast}
+    TurnOnOffDto:
+      type: object
+      properties:
+        deviceId:
+          type: integer
+          format: int64
+          example: 1
+        turnOn:
+          type: boolean
+          example: true
+    TelemetryQuery:
+      type: object
+      properties:
+        sensorId:
+          type: integer
+          format: int64
+          example: 1
+        gte:
+          type: string
+          format: date-time
+          example: 2022-01-01 14:38:08+03
+        lte:
+          type: string
+          format: date-time
+          example: 2022-02-01 00:00:00+03
+    TelemetryData:
+      type: object
+      properties:
+        sensorId:
+          type: integer
+          format: int64
+          example: 1
+        data:
+          type: array
+          items:
+            {
+              type: string,
+              format: json
+            }
+          example: [{ temperature: 25.5 },{ temperature: 26.5 },{ temperature: 27.5 }]
+    TelemetryItem:
+      type: object
+      properties:
+        sensorId:
+          type: integer
+          format: int64
+          example: 1
+        data:
+          type: string
+          format: json
+          example: {temperature: 25.5}  
+    Device:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        title:
+          type: string
+          example: device-1
+        ip:
+          type: string
+          example: 127.0.0.1
