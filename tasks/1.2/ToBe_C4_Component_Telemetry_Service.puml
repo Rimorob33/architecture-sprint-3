@@ -1,0 +1,28 @@
+@startuml
+title Telemetry Service Component Diagram
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Container_Boundary(SmartHome, "Smart Home System") {
+  Container(TelemetryServiceCommand, "Telemetry Service Command Instance", "Java, Spring", "Handles interactions")
+  Container(TelemetryServiceQuery, "Telemetry Service Query Instance", "Java, Spring", "Handles interactions")
+  Container(Database, "Database", "MongoDb", "Хранит информацию о телеметрии")
+}
+
+Container(TelemetryServiceCommand, "Telemetry Service Command Instance", "Java, Spring") {
+  Component(APICommands, "APICommands", "Апи команд")
+  Component(CommandHandler, "Command Handler", "Обработчик команд")
+}
+Container(TelemetryServiceQuery, "Telemetry Service Query Instance", "Java, Spring") {
+  Component(APIQueries, "APIQueries", "Апи запросов")
+  Component(QueryHandler, "Query Handler", "Обработчик запросов")
+}
+
+Rel(APICommands,CommandHandler,"Выполнить command")
+Rel(APIQueries,QueryHandler,"Выполнить query")
+
+Rel(CommandHandler,Database, "Запрос к хранилищу")
+Rel(QueryHandler,Database, "Запрос к хранилищу")
+@enduml

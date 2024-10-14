@@ -1,0 +1,80 @@
+@startuml
+title Smart Home Container Diagram
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Person(admin, "Admin", "Администратор системы")
+Person(user, "User", "Пользователь умного дома")
+System(SmartHomeSystem, "Smart Home System", "Конфигурация системы умного дома, управление и настройка умных домов пользователя, сбор телеметрии")
+
+Container_Boundary(SmartHomeSystem, "Smart Home System") {
+  Container(Gateway, "API Gateway", "Java, Spring", "Шлюз")
+  Container(PaymentService, "Payment Service", "Node.js", "Processes payments")
+
+  Container(CoreService, "Core Service", "Java, Spring", "Настраивает ядро(core) системы, добавляет новые типы устройств и датчиков, конфигурирует шаблоны возможных действий над устройствами")
+Container(CoreDb, "Core Db", "PostgreSql")
+
+  Container(SmartHomeService, "SmartHome Service", "Java, Spring", "Добавлять/удалять устройства, сенсоры. Создавать автоматические скрипты пользователя, настраивать телеметрию")
+  Container(SmartHomeDb, "Smart Home Db", "PostgreSql")
+  Container(DeviceService, "Device Service", "Java, Spring", "Управление устройствами")
+  Container(DeviceDb, "Device Db", "PostgreSql")
+Container(SensorService, "Sensor Service", "Java, Spring", "Управление сенсорами")
+  Container(SensorDb, "Sensor Db", "PostgreSql")
+
+  Container(TelemetryService, "Telemetry Service", "Java, Spring", "Управляет телеметрией")
+  Container(TelemetryDb, "Telemetry Db", "PostgreSql")
+Container(SensorSchedulerService, "Sensor Scheduler Service", "Java, Spring", "Шедуллер запросов к сенсорам")
+  Container(AutoScriptService, "Auto Script Service", "Java, Spring", "Сервис исполнения автоматических скриптов пользователя")
+Container(AutoScriptDb, "AutoScript Db", "PostgreSql")
+Container(KafkaSensors, "Kafka Sensors", "kafka", "Очередь запросов/ответов к сенсорам")
+Container(KafkaDevices, "Kafka Devices", "kafka", "Очередь запросов/ответов к устройствам")
+}
+
+System_Ext(bank, "Bank System", "External bank for processing payments")
+System_Ext(device, "Device", "Устройство")
+System_Ext(sensor, "Sensor", "Датчик)")
+
+
+Rel(user, Gateway, "Uses the system")
+Rel(admin, Gateway, "Uses the system")
+
+
+Rel(Gateway,PaymentService,"Processes payment requests")
+Rel(Gateway,SensorService,"Управлять датчиком")
+Rel(Gateway,DeviceService,"Управлять устройством")
+Rel(Gateway,DeviceService,"Послать команду устройству")
+Rel(Gateway,TelemetryService,"Просмотр телеметрии")
+Rel(Gateway,CoreService, "Добавить тип устройства")
+Rel(Gateway,SmartHomeService, "Управлять системой умного дома")
+
+Rel(SmartHomeService,CoreService, "Получить настройки типов устройств и сенсоров")
+Rel(SmartHomeService,SensorSchedulerService, "Запустить/остановить работу службы опроса датчиков")
+Rel(SmartHomeService,AutoScriptService, "Запустить/остановить работу автоматического скрипта пользователя")
+
+Rel(AutoScriptService,KafkaDevices, "Послать команду устройству")
+Rel(KafkaDevices,DeviceService, "Послать команду устройству")
+Rel(DeviceService,KafkaDevices, "Событие выполнения команды")
+Rel(KafkaDevices,AutoScriptService, "Результат команды")
+Rel(KafkaSensors,TelemetryService, "Сохранить телеметрию")
+Rel(KafkaSensors,AutoScriptService, "Телеметрия")
+Rel(DeviceService,device, "Запрос к устройству")
+Rel(SensorService,sensor, "Запрос к датчику")
+Rel(SensorSchedulerService,KafkaSensors, "Запрос к датчику")
+Rel(KafkaSensors,SensorService, "Запрос к датчику")
+Rel(SensorService,KafkaSensors, "Результат телеметрии")
+
+Rel(DeviceService,CoreService, "Запрос конфигурации по типу устроства")
+
+
+Rel(PaymentService,bank, "Processes payment requests")
+
+Rel(SmartHomeService,SmartHomeDb,"Запись/чтение настроек систем умного дома пользователей")
+Rel(CoreService,CoreDb,"Запись/чтение настроек ядра системы")
+Rel(DeviceService,DeviceDb,"Запись/чтение настроек устройств")
+Rel(SensorService,SensorDb,"Запись/чтение настроек датчиков")
+Rel(TelemetryService,TelemetryDb,"Запись/чтение данных телеметрии")
+Rel(AutoScriptService,AutoScriptDb,"Запись/чтение скриптов пользователей")
+
+@enduml
